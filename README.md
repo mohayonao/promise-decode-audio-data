@@ -29,11 +29,7 @@ In a browser:
 ```
 
 ## API
-
-### AudioContext
-
-#### Instance Methods
-- `decodeAudioData(audioData: ArrayBuffer, [successCallback: function], [errorCallback: function]): Promise<AudioBuffer>`
+- `AudioContext.prototype.decodeAudioData(audioData: ArrayBuffer): Promise<AudioBuffer>`
 
 ## Example
 ```javascript
