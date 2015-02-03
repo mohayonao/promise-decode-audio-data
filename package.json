@@ -3,9 +3,12 @@
   "description": "AudioContext#decodeAudioData that returns a Promise",
   "version": "0.0.0",
   "devDependencies": {
+    "intelli-espower-loader": "^0.6.0",
     "jshint": "^2.6.0",
     "jshint-stylish": "^1.0.0",
-    "mocha": "^2.1.0"
+    "mocha": "^2.1.0",
+    "power-assert": "^0.10.1",
+    "sinon": "^1.12.2"
   },
   "main": "lib/promise-decode-audio-data.js",
   "scripts": {
