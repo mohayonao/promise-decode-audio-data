@@ -1,5 +1,15 @@
 {
   "name": "promise-decode-audio-data",
   "description": "AudioContext#decodeAudioData that returns a Promise",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "devDependencies": {
+    "jshint": "^2.6.0",
+    "jshint-stylish": "^1.0.0",
+    "mocha": "^2.1.0"
+  },
+  "scripts": {
+    "lint": "jshint --reporter node_modules/jshint-stylish/stylish.js lib test",
+    "test": "mocha",
+    "travis": "npm run lint && npm run test"
+  }
 }
