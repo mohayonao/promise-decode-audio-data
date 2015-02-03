@@ -1,0 +1,5 @@
+{
+  "name": "promise-decode-audio-data",
+  "description": "AudioContext#decodeAudioData that returns a Promise",
+  "version": "0.0.0"
+}
