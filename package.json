@@ -1,7 +1,11 @@
 {
   "name": "promise-decode-audio-data",
-  "description": "AudioContext#decodeAudioData that returns a Promise",
-  "version": "0.0.0",
+  "description": "Promise-based decodeAudioData for legacy Web Audio API",
+  "version": "0.1.0",
+  "author": "nao yonamine <mohayonao@gmail.com>",
+  "bugs": {
+    "url": "https://github.com/mohayonao/promise-decode-audio-data/issues"
+  },
   "devDependencies": {
     "intelli-espower-loader": "^0.6.0",
     "jshint": "^2.6.0",
@@ -10,7 +14,17 @@
     "power-assert": "^0.10.1",
     "sinon": "^1.12.2"
   },
+  "keywords": [
+    "webaudioapi",
+    "decodeaudiodata",
+    "promise",
+    "shim"
+  ],
   "main": "lib/promise-decode-audio-data.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mohayonao/promise-decode-audio-data.git"
+  },
   "scripts": {
     "lint": "jshint --reporter node_modules/jshint-stylish/stylish.js lib test",
     "test": "mocha",

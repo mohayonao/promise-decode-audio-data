@@ -1,0 +1,22 @@
+{
+  "name": "promise-decode-audio-data",
+  "description": "Promise-based decodeAudioData for legacy Web Audio API",
+  "version": "0.1.0",
+  "authors": [
+    "nao yonamine <mohayonao@gmail.com>"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test"
+  ],
+  "keywords": [
+    "webaudioapi",
+    "decodeaudiodata",
+    "promise",
+    "shim"
+  ],
+  "license": "MIT",
+  "main": "lib/promise-decode-audio-data.js"
+}
