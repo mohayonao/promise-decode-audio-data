@@ -3,6 +3,7 @@
 var assert = require("power-assert");
 var sinon = require("sinon");
 var WebAudioTestAPI = require("./lib/web-audio-test-api");
+var DOMException = WebAudioTestAPI.DOMException;
 var AudioContext = WebAudioTestAPI.AudioContext;
 var AudioBuffer = WebAudioTestAPI.AudioBuffer;
 
@@ -10,401 +11,290 @@ require("../");
 
 describe("AudioContext#decodeAudioData", function() {
   var audioContext;
-  var audioData, success, failed;
+  var successCallback, errorCallback;
 
   beforeEach(function() {
     audioContext = new AudioContext();
-    audioData = new Uint8Array(4096).buffer;
-    success = sinon.spy();
-    failed = sinon.spy();
+    successCallback = sinon.spy();
+    errorCallback = sinon.spy();
   });
   describe("old API", function() {
-    var resolve, reject;
+    var resolved, rejected;
 
     beforeEach(function() {
       audioContext.decodeAudioDataResultType = "void";
-      resolve = sinon.spy();
-      reject = sinon.spy();
+      resolved = sinon.spy();
+      rejected = sinon.spy();
     });
-    it("(audioData: !ArrayBuffer, success: function, failed: function): void", function(done) {
-      var promise = audioContext.decodeAudioData("INVALID", success, failed);
+    describe("(invalidAudioData: !ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+      it("calls errorCallback and rejected with DOMException", function() {
+        var promise = audioContext.decodeAudioData("INVALID", successCallback, errorCallback);
 
-      promise.then(resolve, reject);
+        promise = promise.then(resolved, rejected);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 1);
-        assert.throws(function() {
-          throw failed.firstCall.args[0];
-        }, function(e) {
-          return e.message === "NotSupportedError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 1);
+          assert(errorCallback.firstCall.args[0] instanceof DOMException);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0] instanceof DOMException);
         });
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "NotSupportedError";
+      });
+    });
+    describe("(audioData: ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+      it("calls successCallback and resolved with AudioBuffer", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.audioData, successCallback, errorCallback);
+
+        promise = promise.then(resolved, rejected);
+
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
+
+        return promise.then(function() {
+          assert(successCallback.callCount === 1);
+          assert(errorCallback.callCount === 0);
+          assert(successCallback.firstCall.args[0] instanceof AudioBuffer);
+          assert(resolved.callCount === 1);
+          assert(rejected.callCount === 0);
+          assert(resolved.firstCall.args[0] instanceof AudioBuffer);
         });
-
-        done();
-      }, 25);
+      });
     });
-    it("(audioData: ArrayBuffer, success: function, failed: function): void -> success", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = false;
+    describe("(invalidAudioData: ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+      it("calls errorCallback and rejected with void", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.invalidAudioData, successCallback, errorCallback);
 
-      var promise = audioContext.decodeAudioData(audioData, success, failed);
+        promise = promise.then(resolved, rejected);
 
-      promise.then(resolve, reject);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 1);
-        assert(failed.callCount === 0);
-        assert(success.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-        assert(resolve.callCount === 1);
-        assert(reject.callCount === 0);
-        assert(resolve.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-
-        done();
-      }, 25);
-    });
-    it("(audioData: ArrayBuffer, success: function, failed: function): void -> failed", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = true;
-
-      var promise = audioContext.decodeAudioData(audioData, success, failed);
-
-      promise.then(resolve, reject);
-
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 1);
-        assert.throws(function() {
-          throw failed.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 1);
+          assert(errorCallback.firstCall.args[0] === void 0);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0]=== void 0);
         });
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+      });
+    });
+    describe("(audioData: ArrayBuffer, successCallback: function): Promise<AudioBuffer>", function() {
+      it("calls successCallback and resolved with an AudioBuffer", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.audioData, successCallback);
+
+        promise = promise.then(resolved, rejected);
+
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
+
+        return promise.then(function() {
+          assert(successCallback.callCount === 1);
+          assert(errorCallback.callCount === 0);
+          assert(successCallback.firstCall.args[0] instanceof AudioBuffer);
+          assert(resolved.callCount === 1);
+          assert(rejected.callCount === 0);
+          assert(resolved.firstCall.args[0] instanceof AudioBuffer);
         });
-
-        done();
-      }, 25);
+      });
     });
-    it("(audioData: ArrayBuffer, success: function): void -> success", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = false;
+    describe("(invalidAudioData: ArrayBuffer, successCallback: function): Promise<AudioBuffer>", function() {
+      it("rejected with void", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.invalidAudioData, successCallback);
 
-      var promise = audioContext.decodeAudioData(audioData, success);
+        promise = promise.then(resolved, rejected);
 
-      promise.then(resolve, reject);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 1);
-        assert(failed.callCount === 0);
-        assert(success.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-        assert(resolve.callCount === 1);
-        assert(reject.callCount === 0);
-        assert(resolve.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-
-        done();
-      }, 25);
-    });
-    it("(audioData: ArrayBuffer, success: function): void -> failed", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = true;
-
-      var promise = audioContext.decodeAudioData(audioData, success);
-
-      promise.then(resolve, reject);
-
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 0);
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0] === void 0);
         });
-        done();
-      }, 25);
+      });
     });
-    it("(audioData: ArrayBuffer): void -> success", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = false;
+    describe("(audioData: ArrayBuffer): Promise<AudioBuffer>", function() {
+      it("resolved with an AudioBuffer", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.audioData);
 
-      var promise = audioContext.decodeAudioData(audioData);
+        promise = promise.then(resolved, rejected);
 
-      promise.then(resolve, reject);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 0);
-        assert(resolve.callCount === 1);
-        assert(reject.callCount === 0);
-        assert(resolve.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-
-        done();
-      }, 25);
-    });
-    it("(audioData: ArrayBuffer): void -> failed", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = true;
-
-      var promise = audioContext.decodeAudioData(audioData);
-
-      promise.then(resolve, reject);
-
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 0);
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+          assert(resolved.callCount === 1);
+          assert(rejected.callCount === 0);
+          assert(resolved.firstCall.args[0] instanceof AudioBuffer);
         });
+      });
+    });
+    describe("(invalidAudioData: ArrayBuffer): Promise<AudioBuffer>", function() {
+      it("rejected with void", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.invalidAudioData);
 
-        done();
-      }, 25);
+        promise = promise.then(resolved, rejected);
+
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
+
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0] === void 0);
+        });
+      });
     });
   });
 
   describe("new API", function() {
-    var resolve, reject;
+    var resolved, rejected;
 
     beforeEach(function() {
       audioContext.decodeAudioDataResultType = "promise";
-      resolve = sinon.spy();
-      reject = sinon.spy();
+      resolved = sinon.spy();
+      rejected = sinon.spy();
     });
-    it("(audioData: !ArrayBuffer, success: function, failed: function): void", function(done) {
-      var promise = audioContext.decodeAudioData("INVALID", success, failed);
+    describe("(invalidAudioData: !ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+      it("calls errorCallback and rejected with a DOMException", function() {
+        var promise = audioContext.decodeAudioData("INVALID", successCallback, errorCallback);
 
-      promise.then(resolve, reject);
+        promise = promise.then(resolved, rejected);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 1);
-        assert.throws(function() {
-          throw failed.firstCall.args[0];
-        }, function(e) {
-          return e.message === "NotSupportedError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 1);
+          assert(errorCallback.firstCall.args[0] instanceof DOMException);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0] instanceof DOMException);
         });
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "NotSupportedError";
+      });
+    });
+    describe("(audioData: ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+      it("calls successCallback and resolved with an AudioBuffer", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.audioData, successCallback, errorCallback);
+
+        promise = promise.then(resolved, rejected);
+
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
+
+        promise.then(function() {
+          assert(successCallback.callCount === 1);
+          assert(errorCallback.callCount === 0);
+          assert(successCallback.firstCall.args[0] instanceof AudioBuffer);
+          assert(resolved.callCount === 1);
+          assert(rejected.callCount === 0);
+          assert(resolved.firstCall.args[0] instanceof AudioBuffer);
         });
-
-        done();
-      }, 25);
+      });
     });
-    it("(audioData: ArrayBuffer, success: function, failed: function): void -> success", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = false;
+    describe("(invalidAudioData: ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+      it("calls errorCallback and rejected with a DOMException", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.invalidAudioData, successCallback, errorCallback);
 
-      var promise = audioContext.decodeAudioData(audioData, success, failed);
+        promise = promise.then(resolved, rejected);
 
-      promise.then(resolve, reject);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 1);
-        assert(failed.callCount === 0);
-        assert(success.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-        assert(resolve.callCount === 1);
-        assert(reject.callCount === 0);
-        assert(resolve.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-
-        done();
-      }, 25);
-    });
-    it("(audioData: ArrayBuffer, success: function, failed: function): void -> failed", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = true;
-
-      var promise = audioContext.decodeAudioData(audioData, success, failed);
-
-      promise.then(resolve, reject);
-
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 1);
-        assert.throws(function() {
-          throw failed.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 1);
+          assert(errorCallback.firstCall.args[0] instanceof DOMException);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0] instanceof DOMException);
         });
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+      });
+    });
+    describe("(audioData: ArrayBuffer, successCallback: function): Promise<AudioBuffer>", function() {
+      it("calls successCallback and resolved with an AudioBuffer", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.audioData, successCallback);
+
+        promise = promise.then(resolved, rejected);
+
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
+
+        return promise.then(function() {
+          assert(successCallback.callCount === 1);
+          assert(errorCallback.callCount === 0);
+          assert(successCallback.firstCall.args[0] instanceof AudioBuffer);
+          assert(resolved.callCount === 1);
+          assert(rejected.callCount === 0);
+          assert(resolved.firstCall.args[0] instanceof AudioBuffer);
         });
-
-        done();
-      }, 25);
+      });
     });
-    it("(audioData: ArrayBuffer, success: function): void -> success", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = false;
+    describe("(invalidAudioData: ArrayBuffer, successCallback: function): Promise<AudioBuffer>", function() {
+      it("rejected with a DOMException", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.invalidAudioData, successCallback);
 
-      var promise = audioContext.decodeAudioData(audioData, success);
+        promise = promise.then(resolved, rejected);
 
-      promise.then(resolve, reject);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 1);
-        assert(failed.callCount === 0);
-        assert(success.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-        assert(resolve.callCount === 1);
-        assert(reject.callCount === 0);
-        assert(resolve.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-
-        done();
-      }, 25);
-    });
-    it("(audioData: ArrayBuffer, success: function): void -> failed", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = true;
-
-      var promise = audioContext.decodeAudioData(audioData, success);
-
-      promise.then(resolve, reject);
-
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 0);
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0] instanceof DOMException);
         });
-        done();
-      }, 25);
+      });
     });
-    it("(audioData: ArrayBuffer): void -> success", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = false;
+    describe("(audioData: ArrayBuffer): Promise<AudioBuffer>", function() {
+      it("resolved with an AudioBuffer", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.audioData);
 
-      var promise = audioContext.decodeAudioData(audioData);
+        promise = promise.then(resolved, rejected);
 
-      promise.then(resolve, reject);
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
 
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 0);
-        assert(resolve.callCount === 1);
-        assert(reject.callCount === 0);
-        assert(resolve.firstCall.calledWith(audioContext.decodeAudioDataDecodedData));
-
-        done();
-      }, 25);
-    });
-    it("(audioData: ArrayBuffer): void -> failed", function(done) {
-      audioContext.decodeAudioDataDecodedData = new AudioBuffer();
-      audioContext.decodeAudioDataFailed = true;
-
-      var promise = audioContext.decodeAudioData(audioData);
-
-      promise.then(resolve, reject);
-
-      assert(success.callCount === 0);
-      assert(failed.callCount === 0);
-      assert(resolve.callCount === 0);
-      assert(reject.callCount === 0);
-
-      setTimeout(function() {
-        assert(success.callCount === 0);
-        assert(failed.callCount === 0);
-        assert(resolve.callCount === 0);
-        assert(reject.callCount === 1);
-        assert.throws(function() {
-          throw reject.firstCall.args[0];
-        }, function(e) {
-          return e.message === "EncodingError";
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+          assert(resolved.callCount === 1);
+          assert(rejected.callCount === 0);
+          assert(resolved.firstCall.args[0] instanceof AudioBuffer);
         });
+      });
+    });
+    describe("(invalidAudioData: ArrayBuffer): Promise<AudioBuffer>", function() {
+      it("rejected with a DOMException", function() {
+        var promise = audioContext.decodeAudioData(WebAudioTestAPI.invalidAudioData);
 
-        done();
-      }, 25);
+        promise = promise.then(resolved, rejected);
+
+        assert(successCallback.callCount === 0);
+        assert(errorCallback.callCount === 0);
+
+        return promise.then(function() {
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+          assert(resolved.callCount === 0);
+          assert(rejected.callCount === 1);
+          assert(rejected.firstCall.args[0] instanceof DOMException);
+        });
+      });
     });
   });
 

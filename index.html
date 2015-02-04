@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/mocha/2.1.0/mocha.css">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/mocha/2.1.0/mocha.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/chai/1.10.0/chai.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/sinon.js/1.7.3/sinon-min.js"></script>
+    <script src="build/promise-decode-audio-data.js"></script>
+    <script>
+    var AudioContext = window.AudioContext || window.webkitAudioContext;
+    var audioContext;
+
+    var audioData = new Uint8Array([
+      0x52, 0x49, 0x46, 0x46,
+      0x58, 0x00, 0x00, 0x00,
+      0x57, 0x41, 0x56, 0x45,
+      0x66, 0x6d, 0x74, 0x20,
+      0x10, 0x00, 0x00, 0x00,
+      0x01, 0x00, 0x02, 0x00,
+      0x44, 0xac, 0x00, 0x00,
+      0x10, 0xb1, 0x02, 0x00,
+      0x04, 0x00, 0x10, 0x00,
+      0x64, 0x61, 0x74, 0x61,
+      0x08, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00,
+    ]).buffer;
+    var invalidAudioData = new Uint8Array(52).buffer;
+
+    mocha.setup("bdd");
+    window.onload = function() {
+      audioContext = new AudioContext();
+      var isPromiseBased = (function() {
+        return !!audioContext.decodeAudioData.original.call(audioContext, audioData, function() {});
+      })();
+      var returns = isPromiseBased ? "Promise<AudioBuffer>" : "void";
+      document.getElementById("returns").textContent = returns;
+      mocha.run();
+    };
+    window.assert = chai.assert;
+  </script>
+  </head>
+  <body>
+    <div id="mocha">
+      <p>
+        <div>This browser's API is</div>
+        <code>
+          decodeAudioData(audioData: ArrayBuffer, successCallback: function, errorCallback: function):
+        </code>
+        <code id="returns"></code>
+      </p>
+    </div>
+    <script>
+    describe("AudioContext#decodeAudioData", function() {
+      var successCallback, errorCallback, resolved, rejected;
+
+      beforeEach(function() {
+        successCallback = sinon.spy();
+        errorCallback = sinon.spy();
+        resolved = sinon.spy();
+        rejected = sinon.spy();
+      });
+
+      describe("(invalidAudioData: !ArrayBuffer, successCallback: functoin, errorCallback: function): Promise<AudioBuffer>", function() {
+        it("calls errorCallback and rejected with a DOMException", function() {
+          var promise = audioContext.decodeAudioData("INVALID", successCallback, errorCallback);
+
+          promise = promise.then(resolved, rejected);
+
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+
+          return promise.then(function() {
+            assert(successCallback.callCount === 0);
+            assert(errorCallback.callCount === 1);
+            assert(errorCallback.firstCall.args[0] instanceof DOMException);
+            assert(resolved.callCount === 0);
+            assert(rejected.callCount === 1);
+            assert(rejected.firstCall.args[0] instanceof DOMException);
+          });
+        });
+      });
+      describe("(audioData: ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+        it("calls successCallback and resolved with an AudioBuffer", function() {
+          var promise = audioContext.decodeAudioData(audioData, successCallback, errorCallback);
+
+          promise = promise.then(resolved, rejected);
+
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+
+          return promise.then(function() {
+            assert(successCallback.callCount === 1);
+            assert(errorCallback.callCount === 0);
+            assert(successCallback.firstCall.args[0] instanceof AudioBuffer);
+            assert(resolved.callCount === 1);
+            assert(rejected.callCount === 0);
+            assert(resolved.firstCall.args[0] instanceof AudioBuffer);
+          });
+        });
+      });
+      describe("(invalidAudioData: ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
+        it("calls errorCallback and rejected [with a DOMException]", function() {
+          var promise = audioContext.decodeAudioData(invalidAudioData, successCallback, errorCallback);
+
+          promise = promise.then(resolved, rejected);
+
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+
+          return promise.then(function() {
+            assert(successCallback.callCount === 0);
+            assert(errorCallback.callCount === 1);
+            assert(!errorCallback.firstCall.args[0] || errorCallback.firstCall.args[0] instanceof DOMException);
+            assert(resolved.callCount === 0);
+            assert(rejected.callCount === 1);
+            assert(!rejected.firstCall.args[0] || rejected.firstCall.args[0] instanceof DOMException);
+          });
+        });
+      });
+      describe("(audioData: ArrayBuffer, successCallback: function): Promise<AudioBuffer>", function() {
+        it("calls successCallback and resolved with an AudioBuffer", function() {
+          var promise = audioContext.decodeAudioData(audioData, successCallback);
+
+          promise = promise.then(resolved, rejected);
+
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+
+          return promise.then(function() {
+            assert(successCallback.callCount === 1);
+            assert(errorCallback.callCount === 0);
+            assert(successCallback.firstCall.args[0] instanceof AudioBuffer);
+            assert(resolved.callCount === 1);
+            assert(rejected.callCount === 0);
+            assert(resolved.firstCall.args[0] instanceof AudioBuffer);
+          });
+        });
+      });
+      describe("(invalidAudioData: ArrayBuffer, successCallback: function): Promise<AudioBuffer>", function() {
+        it("rejected [with a DOMException]", function() {
+          var promise = audioContext.decodeAudioData(invalidAudioData, successCallback);
+
+          promise = promise.then(resolved, rejected);
+
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+
+          return promise.then(function() {
+            assert(successCallback.callCount === 0);
+            assert(errorCallback.callCount === 0);
+            assert(resolved.callCount === 0);
+            assert(rejected.callCount === 1);
+            assert(!rejected.firstCall.args[0] || rejected.firstCall.args[0] instanceof DOMException);
+          });
+        });
+      });
+      describe("(audioData: ArrayBuffer): Promise<AudioBuffer>", function() {
+        it("resolved with a AudioBuffer", function() {
+          var promise = audioContext.decodeAudioData(audioData);
+
+          promise = promise.then(resolved, rejected);
+
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+
+          return promise.then(function() {
+            assert(successCallback.callCount === 0);
+            assert(errorCallback.callCount === 0);
+            assert(resolved.callCount === 1);
+            assert(rejected.callCount === 0);
+            assert(resolved.firstCall.args[0] instanceof AudioBuffer);
+          });
+        });
+      });
+      describe("(invalidAudioData: ArrayBuffer): Promise<AudioBuffer>", function() {
+        it("rejected [with a DOMException]", function() {
+          var promise = audioContext.decodeAudioData(invalidAudioData);
+
+          promise = promise.then(resolved, rejected);
+
+          assert(successCallback.callCount === 0);
+          assert(errorCallback.callCount === 0);
+
+          return promise.then(function() {
+            assert(successCallback.callCount === 0);
+            assert(errorCallback.callCount === 0);
+            assert(resolved.callCount === 0);
+            assert(rejected.callCount === 1);
+            assert(!rejected.firstCall.args[0] || rejected.firstCall.args[0] instanceof DOMException);
+          });
+        });
+      });
+    });
+    </script>
+  </body>
+</html>
