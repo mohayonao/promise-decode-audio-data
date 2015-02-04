@@ -20,5 +20,5 @@
     "shim"
   ],
   "license": "MIT",
-  "main": "lib/promise-decode-audio-data.js"
+  "main": "build/promise-decode-audio-data.js"
 }
