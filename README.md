@@ -40,5 +40,21 @@ audioContext.decodeAudioData(audioData).then(function(decodedData) {
 });
 ```
 
+## Development
+build: `browserify -> uglify`
+```
+npm run build
+```
+
+test: `mocha` (and [Online test suite](http://mohayonao.github.io/promise-decode-audio-data/))
+```
+npm run test
+```
+
+lint: `jshint`
+```
+npm run lint
+```
+
 ## License
 MIT
