@@ -8,6 +8,15 @@
 
 [http://webaudio.github.io/web-audio-api/#AudioContext-decodeAudioData](http://webaudio.github.io/web-audio-api/#widl-AudioContext-decodeAudioData-Promise-AudioBuffer--ArrayBuffer-audioData-DecodeSuccessCallback-successCallback-DecodeErrorCallback-errorCallback)
 
+## Native API supports
+|                      | Support |
+| -------------------- |:-------:|
+| Google Chrome 40     | :x:     |
+| Firefox 35           | :x:     |
+| Safari 8             | :x:     |
+| Opera 27             | :x:     |
+| iOS 8                | :x:     |
+
 ## Installation
 
 npm:
