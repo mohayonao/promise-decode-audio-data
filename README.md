@@ -11,10 +11,10 @@
 ## Native API supports
 |                      | Support |
 | -------------------- |:-------:|
-| Google Chrome 40     | :x:     |
-| Firefox 35           | :x:     |
+| Google Chrome 43     | :x:     |
+| Opera 30             | :x:     |
+| Firefox 36           | :ok:    |
 | Safari 8             | :x:     |
-| Opera 27             | :x:     |
 | iOS 8                | :x:     |
 
 ## Installation
