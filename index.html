@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/mocha/2.1.0/mocha.css">
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/mocha/2.1.0/mocha.min.js"></script>
-    <script src="http://cdnjs.cloudflare.com/ajax/libs/chai/1.10.0/chai.min.js"></script>
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/mocha/2.2.5/mocha.css">
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/mocha/2.2.5/mocha.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/chai/3.0.0/chai.min.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/sinon.js/1.7.3/sinon-min.js"></script>
     <script src="build/promise-decode-audio-data.js"></script>
     <script>
@@ -35,9 +35,7 @@
     mocha.setup("bdd");
     window.onload = function() {
       audioContext = new AudioContext();
-      var isPromiseBased = (function() {
-        return !!audioContext.decodeAudioData.original.call(audioContext, audioData(), function() {});
-      })();
+      var isPromiseBased = !audioContext.decodeAudioData.original;
       var returns = isPromiseBased ? "Promise<AudioBuffer>" : "void";
       document.getElementById("returns").textContent = returns;
       mocha.run();
@@ -66,25 +64,6 @@
         rejected = sinon.spy();
       });
 
-      describe("(invalidAudioData: !ArrayBuffer, successCallback: functoin, errorCallback: function): Promise<AudioBuffer>", function() {
-        it("calls errorCallback and rejected with a Error", function() {
-          var promise = audioContext.decodeAudioData("INVALID", successCallback, errorCallback);
-
-          promise = promise.then(resolved, rejected);
-
-          assert(successCallback.callCount === 0);
-          assert(errorCallback.callCount === 0);
-
-          return promise.then(function() {
-            assert(successCallback.callCount === 0);
-            assert(errorCallback.callCount === 1);
-            assert(errorCallback.firstCall.args[0] instanceof Error);
-            assert(resolved.callCount === 0);
-            assert(rejected.callCount === 1);
-            assert(rejected.firstCall.args[0] instanceof Error);
-          });
-        });
-      });
       describe("(audioData: ArrayBuffer, successCallback: function, errorCallback: function): Promise<AudioBuffer>", function() {
         it("calls successCallback and resolved with an AudioBuffer", function() {
           var promise = audioContext.decodeAudioData(audioData(), successCallback, errorCallback);
