@@ -2,32 +2,38 @@
   "name": "promise-decode-audio-data",
   "description": "Promise-based decodeAudioData for legacy Web Audio API",
   "version": "0.2.0",
-  "author": "nao yonamine <mohayonao@gmail.com>",
+  "author": "Nao Yonamine <mohayonao@gmail.com>",
   "bugs": {
     "url": "https://github.com/mohayonao/promise-decode-audio-data/issues"
   },
   "devDependencies": {
-    "browserify": "^10.2.4",
-    "eslint": "^0.24.0",
-    "uglify-js": "^2.4.23"
+    "browserify": "^13.1.1",
+    "eslint": "^3.10.1",
+    "npm-run-all": "^3.1.1",
+    "uglifyify": "^3.0.4"
   },
+  "homepage": "https://mohayonao.github.io/promise-decode-audio-data/",
   "keywords": [
-    "webaudioapi",
     "decodeaudiodata",
     "promise",
-    "shim"
+    "webaudio"
   ],
-  "main": "lib/promise-decode-audio-data.js",
+  "license": "MIT",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/mohayonao/promise-decode-audio-data.git"
   },
   "scripts": {
-    "build": "npm run build-browser && npm run build-minify",
-    "build-browser": "browserify lib/promise-decode-audio-data.js -o build/promise-decode-audio-data.js",
-    "build-minify": "uglifyjs build/promise-decode-audio-data.js -o build/promise-decode-audio-data.min.js",
-    "lint": "eslint lib",
+    "build": "npm-run-all build:*",
+    "build:browser": "browserify -o build/promise-decode-audio-data.js index.js",
+    "build:minify": "browserify -o build/promise-decode-audio-data.min.js -t uglifyify index.js ",
+    "lint": "eslint index.js",
+    "postversion": "git push && git push --tags",
+    "prepublish": "npm-run-all test build",
+    "preversion": "npm run test",
     "test": "echo 'not support cli based test, please test on your browser :)'",
-    "travis": "npm run lint"
+    "travis": "npm run lint test",
+    "version": "npm run build && git add -A build"
   }
 }
