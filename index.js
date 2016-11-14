@@ -1,18 +1,28 @@
-var AudioContext = global.AudioContext || global.webkitAudioContext;
+/* global Uint32Array, Promise */
+
+"use strict";
+
+var BaseAudioContext = require("base-audio-context");
 var OfflineAudioContext = global.OfflineAudioContext || global.webkitOfflineAudioContext;
-var isPromiseBased, decodeAudioData;
 
 if (OfflineAudioContext) {
-  isPromiseBased = (function() {
-    var context = new OfflineAudioContext(1, 2, 44100);
+  var silent = new Uint32Array([
+    0x46464952, 0x00000038, 0x45564157, 0x20746d66,
+    0x00000010, 0x00010001, 0x0000ac44, 0x00015888,
+    0x00100002, 0x61746164, 0x00000014, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+  ]).buffer;
 
-    return context.decodeAudioData(new Uint8Array(128).buffer, function() {}, function() {});
+  var isPromiseBased = (function() {
+    var context = new OfflineAudioContext(1, 128, 44100);
+
+    return context.decodeAudioData(silent, function() {}, function() {});
   })();
 
   if (!isPromiseBased) {
-    decodeAudioData = AudioContext.prototype.decodeAudioData;
+    var decodeAudioData = BaseAudioContext.prototype.decodeAudioData;
 
-    AudioContext.prototype.decodeAudioData = function(audioData, successCallback, errorCallback) {
+    BaseAudioContext.prototype.decodeAudioData = function(audioData, successCallback, errorCallback) {
       var _this = this;
       var promise = new Promise(function(resolve, reject) {
         return decodeAudioData.call(_this, audioData, resolve, reject);
@@ -23,6 +33,6 @@ if (OfflineAudioContext) {
       return promise;
     };
 
-    AudioContext.prototype.decodeAudioData.original = decodeAudioData;
+    BaseAudioContext.prototype.decodeAudioData.original = decodeAudioData;
   }
 }
