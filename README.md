@@ -9,13 +9,17 @@
 [http://webaudio.github.io/web-audio-api/#AudioContext-decodeAudioData](http://webaudio.github.io/web-audio-api/#widl-AudioContext-decodeAudioData-Promise-AudioBuffer--ArrayBuffer-audioData-DecodeSuccessCallback-successCallback-DecodeErrorCallback-errorCallback)
 
 ## Native API supports
-|                      | Support |
-| -------------------- |:-------:|
-| Google Chrome 43     | :x:     |
-| Opera 30             | :x:     |
-| Firefox 36           | :ok:    |
-| Safari 8             | :x:     |
-| iOS 8                | :x:     |
+|                       | Support              |
+| --------------------- |:--------------------:|
+| Firefox               | :white_check_mark:   |
+| Chrome 49+            | :white_check_mark:   |
+| Older Chrome versions | :x:                  |
+| Opera                 | :x:                  |
+| Safari                | :x:                  |
+| Edge                  | Unknown              |
+| Internet Explorer     | :x: No Web Audio API |
+
+See [here](https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/decodeAudioData#compat-desktop) for full details.
 
 ## Installation
 
