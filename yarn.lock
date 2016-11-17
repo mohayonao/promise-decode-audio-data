@@ -121,9 +121,9 @@ balanced-match@^0.4.1:
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-0.4.2.tgz#cb3f3e3c732dc0f01ee70b403f302e61d7709838"
 
-base-audio-context:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/base-audio-context/-/base-audio-context-1.0.3.tgz#f152e59f5b7f7e854e4207b00a84a82316ca3c35"
+base-audio-context@1.1:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/base-audio-context/-/base-audio-context-1.1.0.tgz#773983ceaeb19717aeca5cd61d92fa8c3bbb4202"
 
 base64-js@^1.0.2:
   version "1.2.0"
